@@ -7,7 +7,7 @@ pub struct Token {
     pub namespace: Option<String>, // Required field that can be null (None)
 }
 
-// Holds both tokens and the complete list of include enums
+// Holds both tokens and the complete list of include enum
 pub struct LexerResult {
     pub tokens: Vec<Token>,
     pub required_includes: Vec<RequiredInclude>,
