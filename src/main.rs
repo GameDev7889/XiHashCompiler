@@ -11,14 +11,16 @@ fn main() {
     let filename = "main.xi";
     let script = r#"
         import XiHash
-        string name = "Alice"
-        int age = 30
-        uint score = 9500
-        ufloat temperature = 98.6
-        double pi = 3.14159
+        string name = "Alice";
+        int age = 30;
+        uint score = 9500;
+        ufloat temperature = 98.6;
+        double pi = 3.14159;
 
-        using namespace Console
-        Print("Hello, " + name + "!")
+        int sum = 10 + 20;
+
+        using namespace Console;
+        Print("Hello, " + name + "!");
     "#;
 
     let lexer_result = Lexer::tokenize(script, filename);

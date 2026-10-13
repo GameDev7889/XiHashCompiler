@@ -6,6 +6,14 @@ pub enum RequiredInclude {
     Custom(String),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Operator {
+    Add,
+    Sub,
+    Mul,
+    Div
+}
+
 // Extended Expression AST to handle numbers and general math
 #[derive(Debug, Clone)]
 pub enum Expr {
@@ -13,7 +21,11 @@ pub enum Expr {
     IntLit(i64),
     FloatLit(f64),
     Variable(String),
-    Add(Box<Expr>, Box<Expr>),
+    Binary {
+        op: Operator,
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -60,8 +72,14 @@ impl Expr {
             Expr::IntLit(n) => n.to_string(),
             Expr::FloatLit(f) => format!("{}f", f), // Appends 'f' for C++ float literals
             Expr::Variable(name) => name.clone(),
-            Expr::Add(left, right) => {
-                format!("{} + {}", left.to_cpp(), right.to_cpp())
+            Expr::Binary { op, left, right } => {
+                let op_str = match op {
+                    Operator::Add => "+",
+                    Operator::Sub => "-",
+                    Operator::Mul => "*",
+                    Operator::Div => "/",
+                };
+                format!("({} {} {})", left.to_cpp(), op_str, right.to_cpp())
             }
         }
     }

@@ -1,4 +1,4 @@
-use crate::ast::{Statement, Expr};
+use crate::ast::{Statement, Expr, Operator};
 use crate::lexer::Token;
 
 pub struct Parser;
@@ -70,11 +70,44 @@ impl Parser {
     // Enhanced expression parser handling strings, ints, floats, variables, and math
     fn parse_expr(s: &str) -> Expr {
         let s = s.trim();
+
+        // Addition & Subtraction Operator
+        if let Some(idx) = Self::find_outer_operator(s, &['+', '-']) {
+            let (left_str, right_str) = s.split_at(idx);
+            let op_char = right_str.chars().next().unwrap();
+            let right_str = &right_str[1..]; // Skip the operator character
+
+            let op = if op_char == '+' { Operator::Add } else { Operator::Sub };
+            return Expr::Binary {
+                op,
+                left: Box::new(Self::parse_expr(left_str)),
+                right: Box::new(Self::parse_expr(right_str)),
+            };
+        }
+
+        // Multiplication & Division Operator
+        if let Some(idx) = Self::find_outer_operator(s, &['*', '/']) {
+            let (left_str, right_str) = s.split_at(idx);
+            let op_char = right_str.chars().next().unwrap();
+            let right_str = &right_str[1..]; // Skip the operator character
+
+            let op = if op_char == '*' { Operator::Mul } else { Operator::Div };
+            return Expr::Binary {
+                op,
+                left: Box::new(Self::parse_expr(left_str)),
+                right: Box::new(Self::parse_expr(right_str)),
+            };
+        }
+
         if s.contains('+') {
             let parts: Vec<&str> = s.split('+').collect();
             let left = Self::parse_expr(parts[0]);
             let right = Self::parse_expr(parts[1..].join("+").as_str());
-            Expr::Add(Box::new(left), Box::new(right))
+            Expr::Binary {
+                op: Operator::Add,
+                left: Box::new(left),
+                right: Box::new(right),
+            }
         } else if s.starts_with('"') && s.ends_with('"') {
             let inner = &s[1..s.len() - 1];
             Expr::StringLit(inner.to_string())
@@ -88,5 +121,22 @@ impl Parser {
             // Otherwise, it's a variable name lookup
             Expr::Variable(s.to_string())
         }
+    }
+
+    // Helper that searches for operators while ignoring text inside string quotes
+    fn find_outer_operator(s: &str, target_ops: &[char]) -> Option<usize> {
+        let mut in_quotes = false;
+        let bytes = s.as_bytes();
+
+        for (i, &b) in bytes.iter().enumerate().rev() {
+            let c = b as char;
+            if c == '"' {
+                in_quotes = !in_quotes;
+            }
+            if !in_quotes && target_ops.contains(&c) {
+                return Some(i);
+            }
+        }
+        None
     }
 }
